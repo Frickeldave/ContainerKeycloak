@@ -1,0 +1,27 @@
+{
+    "username": "#testuser_username#",
+    "enabled": true,
+    "totp": false,
+    "emailVerified": true,
+    "firstName": "#testuser_firstname#",
+    "lastName": "#testuser_lastname#",
+    "email": "#testuser_username#@#testuser_lastname#",
+    "disableableCredentialTypes": ["password"],
+    "requiredActions": [],
+    "notBefore": 0,
+    "access": {
+      "manageGroupMembership": true,
+      "view": true,
+      "mapRoles": true,
+      "impersonate": true,
+      "manage": true
+    },
+    "credentials" : [ 
+                      {
+                          "value" : "#testuser_pwd#", 
+                          "type"  : "password",
+                          "temporary" : false 
+                      } 
+                     ],
+    "realmRoles" : ["admin","offline_access","uma_authorization"]
+  }

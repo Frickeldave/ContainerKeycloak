@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   mariadb:
-    image: ghcr.io/frickeldave/fd_mariadb:10.5.13-r0
+    image: ghcr.io/frickeldave/fd_mariadb:10.6.4-r1
     hostname: mariadb
     restart: "no"
-    volumes:
-      - mariadb-data:/home/appuser/data
+    # volumes: # Tip: Disable for frequently recurring tests
+    #   - mariadb-data:/home/appuser/data
     networks:
       kcnet:
         ipv4_address: 172.66.30.110
@@ -31,11 +31,12 @@ services:
       - MDB_APPDB_PWD=adminkeycloakdb2test
   
   keycloak:
-    image: ghcr.io/frickeldave/fd_keycloak:latest
+    image: ghcr.io/frickeldave/fd_keycloak:15.0.1
+    entrypoint: /bin/sh -c 'echo "overridden entrypoint" > /tmp/test; tail -f /tmp/test;'
     hostname: keycloak
     restart: "no"
-    volumes:
-      - keycloak-data:/home/appuser/data
+    # volumes: # Tip: Disable for frequently recurring tests
+    #   - keycloak-data:/home/appuser/data
     networks:
       kcnet:
         ipv4_address: 172.66.30.120

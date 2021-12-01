@@ -495,10 +495,10 @@
             <buffer-cache name="default"/>
             <server name="default-server">
                 <http-listener name="default" socket-binding="http" redirect-socket="https" enable-http2="true"/>
-                <https-listener name="https" socket-binding="https" security-realm="#MC_PORJECT#Realm" enable-http2="true"/>
+                <https-listener name="https" socket-binding="https" security-realm="#MC_PROJECT#Realm" enable-http2="true"/>
                 <host name="default-host" alias="localhost">
                     <location name="/" handler="welcome-content"/>
-                    <http-invoker security-realm="#MC_PORJECT#Realm"/>
+                    <http-invoker security-realm="#MC_PROJECT#Realm"/>
                 </host>
             </server>
             <servlet-container name="default">

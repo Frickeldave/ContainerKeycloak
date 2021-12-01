@@ -27,7 +27,7 @@ ADD         standalone.xml /home/appuser/app/standalone.xml
 ADD         keycloak_createdb.sql /home/appuser/app/keycloak_createdb.sql
 ADD         testusers.json /home/appuser/app/testusers.json
 
-RUN         curl -L https://downloads.jboss.org/keycloak/${KC_VERSION}/keycloak-${KC_VERSION}.tar.gz --output /home/appuser/app/keycloak.tar.gz --progress-bar; \
+RUN         curl -L https://github.com/keycloak/keycloak/releases/download/${KC_VERSION}/keycloak-${KC_VERSION}.tar.gz --output /home/appuser/app/keycloak.tar.gz --progress-bar; \
 	        tar xzf /home/appuser/app/keycloak.tar.gz -C /home/appuser/app; \
             mv /home/appuser/app/keycloak-${KC_VERSION} /home/appuser/app/keycloak; \
 	        rm -f /home/appuser/app/keycloak.tar.gz

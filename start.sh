@@ -69,10 +69,10 @@ then
     echo "First start. Create initial certificates with an alternative name"
     export CRT_ALTNAME=${KC_BINDADDRESS}
     export CRT_ALTTYPE="IP"
-	/home/appuser/app/helper/createcerts.sh
+	/home/appuser/app/tools/createcerts.sh
 
     echo "Create certificate for keycloak"
-    openssl pkcs12 -export -in /home/appuser/data/certificates/cer.pem -inkey /home/appuser/data/certificates/key.pem -out /home/appuser/data/certificates/keycloak.p12 -passout pass:${KC_CERTPWD}
+    openssl pkcs12 -export -in /home/appuser/data/certificates/cer.crt -inkey /home/appuser/data/certificates/key.key -out /home/appuser/data/certificates/keycloak.p12 -passout pass:${KC_CERTPWD}
 
     echo "Create keystore for keycloak"
     keytool -importkeystore -noprompt -deststorepass ${KC_CERTPWD} -destkeypass ${KC_CERTPWD} -destkeystore /home/appuser/data/certificates/keycloak_keystore.jks -srckeystore /home/appuser/data/certificates/keycloak.p12 -srcstoretype PKCS12 -srcstorepass ${KC_CERTPWD} -deststoretype pkcs12

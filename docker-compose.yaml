@@ -2,279 +2,84 @@ version: '3.8'
 
 services:
   mariadb:
-    image: dogchain2go/mariadb:latest
+    image: ghcr.io/frickeldave/fd_mariadb:10.5.13-r0
     hostname: mariadb
     restart: "no"
-    dns: 172.6.66.100
     volumes:
       - mariadb-data:/home/appuser/data
     networks:
-      appnet:
-        ipv4_address: 172.6.66.110
+      kcnet:
+        ipv4_address: 172.66.30.110
     healthcheck:
-      test: "mysqladmin status -h 127.0.0.1 -u healthstatus -ptest123 -P 30110"
+      test: "mysqladmin status -h 127.0.0.1 -u healthstatus -phealth2test -P 30110"
       interval: 5s
       timeout: 10s
       retries: 3
     environment:
-      - MDB_ROOTPWD=test123
+      - MDB_ROOTPWD=root2test
       - MDB_PORT=30110
       - MDB_ADMINUSER=adminmdb
       - MDB_BACKUPUSER=backupmdb
-      - MDB_ADMINPWD=test123
-      - MDB_BACKUPPWD=test123
-      - MDB_HEALTHPWD=test123
+      - MDB_ADMINPWD=admin2test
+      - MDB_BACKUPPWD=backup2test
+      - MDB_HEALTHUSER=healthstatus
+      - MDB_HEALTHPWD=health2test
       - MDB_COLLATION=utf8_unicode_ci
       - MDB_CHARACTERSET=utf8
+      - MDB_APPDB=keycloak
+      - MDB_APPDB_USER=adminkeycloakdb
+      - MDB_APPDB_PWD=adminkeycloakdb2test
+  
   keycloak:
-
-    image: ghcr.io/frickeldave/fd_keycloak:
+    image: ghcr.io/frickeldave/fd_keycloak:latest
     hostname: keycloak
     restart: "no"
-    dns: 172.6.66.100
     volumes:
       - keycloak-data:/home/appuser/data
     networks:
-      appnet:
-        ipv4_address: 172.6.66.108
+      kcnet:
+        ipv4_address: 172.66.30.120
     healthcheck:
-      test: "curl --fail https://172.6.66.108:30110 --insecure || false"
+      test: "curl --fail https://172.66.30.120:30120 --insecure || false"
       interval: 5s
       timeout: 10s
       retries: 3
     environment:
-      - KC_ROLEID=keycloakroleid
-      - KC_AJPINTPORT=30108
-      - KC_HTTPINTPORT=30109
-      - KC_HTTPSINTPORT=30110
-      - KC_MGNTHTTPINTPORT=30111
-      - KC_MGNTHTTPSINTPORT=30112
-      - KC_MYSQLADMINUSER=adminmdb
-      - KC_MYSQLADMINPASSWORD=dogchain2go
-      - KC_MYSQLHOST=mariadb.dogchain.go
-      - KC_MYSQLPORT=30103
+      - KC_AJPINTPORT=30124
+      - KC_HTTPINTPORT=30121
+      - KC_HTTPSINTPORT=30120
+      - KC_MGNTHTTPINTPORT=30123
+      - KC_MGNTHTTPSINTPORT=30122
+      #- KC_MYSQLADMINUSER=adminmdb
+      #- KC_MYSQLADMINPASSWORD=admin2test
+      - KC_MYSQLHOST=172.66.30.110
+      - KC_MYSQLPORT=30110
       - KC_MYSQLDB=keycloak
-      - KC_MYSQLUSERNAME=keycloak
-      - KC_MYSQLPASSWORD=keycloak2go
+      - KC_MYSQLUSERNAME=adminkeycloakdb
+      - KC_MYSQLPASSWORD=adminkeycloakdb2test
       - KC_MYSQLHEALTHUSER=healthstatus
-      - KC_MYSQLHEALTHPWD=dogchain2go
-      - KC_BINDADDRESS=172.6.66.108
-      - KC_REMOVE_DB=true
-      - KC_CERTPWD=dogchain2go
-      - KC_ADMINUSER=fallbackadmin
-      - KC_ADMINPWD=dogchain2go
+      - KC_MYSQLHEALTHPWD=health2test
+      - KC_BINDADDRESS=172.66.30.120
+      #- KC_REMOVE_DB=true
+      - KC_CERTPWD=cert2test
+      - KC_ADMINUSER=kcadmin
+      - KC_ADMINPWD=kcadmin2test
       - KC_CREATEINITREALM=true
-      - KC_INITREALM=dogchain2go
-      - KC_INITUSERMAILDOMAIN=dogchain.go
-      - KC_INITUSERPASSWORD=dogchain2go
+      - KC_INITREALM=frickeldave
+      - KC_INITUSERMAILDOMAIN=frickeldave.local
+      - KC_INITUSERPASSWORD=init2test
       - CRT_VALIDITY=3650
       - CRT_C=DE
       - CRT_S=BAVARIAN
       - CRT_L=ISMANING
-      - CRT_OU=DOGCHAIN.GO
-      - CRT_CN=KEYCLOAK.DOGCHAIN.GO
-  leberkas:
-    build:
-      dockerfile: Dockerfile-leberkas-runtime
-      context: ./../docker_leberkas
-    image: dogchain2go/leberkas:latest
-    hostname: leberkas
-    dns: 172.6.66.100
-    volumes:
-      - leberkas-data:/home/appuser/data
-    networks:
-      appnet:
-        ipv4_address: 172.6.66.113
-    environment:
-      - LBK_ROLEID=leberkasroleid
-      - LBK_PORT=30113
-      - DNS_IPADDR=172.6.66.100
-      - DNS_INITDOMAIN=dogchain.go
-      - CRT_VALIDITY=3650
-      - CRT_C=DE
-      - CRT_S=BAVARIAN
-      - CRT_L=ISMANING
-      - CRT_OU=DOGCHAIN.GO
-      - CRT_CN=LEBERKAS.DOGCHAIN.GO
-  obazda:
-    build:
-      dockerfile: Dockerfile-obazda-runtime
-      context: ./../docker_obazda
-    image: dogchain2go/obazda:latest
-    hostname: obazda
-    dns: 172.6.66.100
-    volumes:
-      - obazda-data:/home/appuser/data
-    networks:
-      appnet:
-        ipv4_address: 172.6.66.114
-    environment:
-      - OB_VAULTROLEID=obazdaroleid
-      - OB_VAULTPATH=dogchain2go/containers/obazda
-  gitea:
-    build: 
-      dockerfile: Dockerfile-gitea-runtime
-      context: ./../docker_gitea
-    image: dogchain2go/gitea:latest
-    hostname: gitea
-    restart: "no"
-    dns: 172.6.66.100
-    depends_on:
-      - mariadb
-    volumes:
-      - gitea-data:/home/appuser/data
-    networks:
-      appnet:
-        ipv4_address: 172.6.66.106
-    healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost:30106", "--insecure"]
-      interval: 5s
-      timeout: 10s
-      retries: 3
-    environment:
-      - GT_ROLEID=gitearoleid
-      - GT_APPNAME=DOGchain2Go
-      - GT_MYSQLADMINUSER=adminmdb
-      - GT_MYSQLADMINPASSWORD=dogchain2go
-      - GT_MYSQLHOST=mariadb.dogchain.go
-      - GT_MYSQLPORT=30103
-      - GT_MYSQLDB=gitea
-      - GT_MYSQLUSERNAME=gitea
-      - GT_MYSQLPASSWORD=gitea2go
-      - GT_MYSQLHEALTHUSER=healthstatus
-      - GT_MYSQLHEALTHPWD=dogchain2go
-      - GT_PROTOCOL=https
-      - GT_HTTP_PORT=30106
-      - GT_INITIALADMIN=fallbackadmin
-      - GT_INITIALADMINPWD=dogchain2go
-      - GT_INITIALADMINMAIL=admin@dogchain.go
-      - GT_REMOVE_DB=true
-      - GT_MAILENABLED=true
-      - GT_MAILSUBJECTPREFIX=[Gitea]
-      - GT_MAILHOST=mail.dogchain.go
-      - GT_MAILFROM=gitea@dogchain.go
-      - GT_MAILUSER=svc_gitea
-      - GT_MAILPASSWD=magic2go
-      - CRT_VALIDITY=3650
-      - CRT_C=DE
-      - CRT_S=BAVARIAN
-      - CRT_L=ISMANING
-      - CRT_OU=DOGCHAIN.GO
-      - CRT_CN=GITEA.DOGCHAIN.GO
-  jenkins:
-    build: 
-      dockerfile: Dockerfile-jenkins-runtime
-      context: ./../docker_jenkins
-    image: dogchain2go/jenkins:latest
-    hostname: jenkins
-    restart: "no"
-    dns: 172.6.66.100
-    depends_on:
-      - jre11
-    volumes:
-      - jenkins-data:/home/appuser/data
-    networks:
-      appnet:
-        ipv4_address: 172.6.66.107
-    healthcheck:
-      test: "curl --fail https://localhost:30107 --insecure || false"
-      interval: 5s
-      timeout: 10s
-      retries: 3
-    environment:
-      - JKS_ROLEID=jenkinsroleid
-      - JKS_CERTPWD=dogchain2go
-      - JKS_HTTPS_PORT=30107
-      - JKS_MAIL=jenkins@dgchain.go
-      - JKS_URL=jenkins.dogchain.go
-      - JKS_SLAVEPORT=50000
-      - CRT_VALIDITY=3650
-      - CRT_C=DE
-      - CRT_S=BAVARIAN
-      - CRT_L=ISMANING
-      - CRT_OU=DOGCHAIN.GO
-      - CRT_CN=JENKINS.DOGCHAIN.GO
-  nexus:
-    build: 
-      dockerfile: Dockerfile-nexus-runtime
-      context: ./../docker_nexus
-    image: dogchain2go/nexus:latest
-    hostname: nexus
-    restart: "no"
-    dns: 172.6.66.100
-    volumes:
-      - nexus-data:/home/appuser/data
-    networks:
-      appnet:
-        ipv4_address: 172.6.66.114
-    healthcheck:
-      test: "curl --fail https://172.6.66.114:30114 --insecure || false"
-      interval: 5s
-      timeout: 10s
-      retries: 3
-    environment:
-      - NX_ROLEID=nexusroleid
-      - NX_CERTPWD=dogchain2go
-      - NX_INTPORT=30114
-      - CRT_VALIDITY=3650
-      - CRT_C=DE
-      - CRT_S=BAVARIAN
-      - CRT_L=ISMANING
-      - CRT_OU=DOGCHAIN.GO
-      - CRT_CN=GITEA.DOGCHAIN.GO
-  sonarqube:
-    build: 
-      dockerfile: Dockerfile-sonarqube-runtime
-      context: ./../docker_sonarqube
-    image: dogchain2go/sonarqube:latest
-    hostname: sonarqube
-    restart: "no"
-    dns: 172.6.66.100
-    ports:
-      - "30115:30115"
-    volumes:
-      - sonarqube-data:/home/appuser/data
-    networks:
-      appnet:
-        ipv4_address: 172.6.66.115
-    healthcheck:
-      test: "curl --fail https://172.6.66.115:30115 --insecure || false"
-      interval: 5s
-      timeout: 10s
-      retries: 3
-    environment:
-      - SQ_ROLEID=sonarquberoleid
-      - SQ_INTPORT=30115
-      - SQ_MYSQLADMINUSER=adminmdb
-      - SQ_MYSQLADMINPASSWORD=dogchain2go
-      - SQ_MYSQLHOST=mariadb.dogchain.go
-      - SQ_MYSQLPORT=30103
-      - SQ_MYSQLDB=gitea
-      - SQ_MYSQLUSERNAME=gitea
-      - SQ_MYSQLPASSWORD=gitea2go
-      - SQ_MYSQLHEALTHUSER=healthstatus
-      - SQ_MYSQLHEALTHPWD=dogchain2go
-      - CRT_VALIDITY=3650
-      - CRT_C=DE
-      - CRT_S=BAVARIAN
-      - CRT_L=ISMANING
-      - CRT_OU=DOGCHAIN.GO
-      - CRT_CN=SONARQUBE.DOGCHAIN.GO
+      - CRT_OU=FRICKELDAVE.LOCAL
+      - CRT_CN=KEYCLOAK.FRICKELDAVE.LOCAL
 networks:
-  appnet:
+  kcnet:
     ipam:
       driver: default
       config:
-        - subnet: "172.6.66.0/24"
+        - subnet: "172.66.30.0/24"
 volumes:
   mariadb-data:
-  vault-data:
-  nginx_openresty-data:
-  coredns-data:
   keycloak-data:
-  leberkas-data:
-  obazda-data:
-  gitea-data:
-  jenkins-data:
-  nexus-data:
-  sonarqube-data:

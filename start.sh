@@ -6,11 +6,11 @@ INITIALSTART=0
 echo "Running start.sh script of keycloak"
 
 # set initstart variable
-if [ ! -f /home/appuser/data/nginx/firststart.flg ]
+if [ ! -f /home/appuser/data/firststart.flg ]
 then 
     echo "First start, set initialstart variable to 1"
     INITIALSTART=1
-    echo `date +%Y-%m-%d_%H:%M:%S_%z` > /home/appuser/data/nginx/firststart.flg
+    echo `date +%Y-%m-%d_%H:%M:%S_%z` > /home/appuser/data/firststart.flg
 else
 	echo "It's not the first start, skip first start section"
 fi
@@ -77,24 +77,26 @@ then
     echo "Create keystore for keycloak"
     keytool -importkeystore -noprompt -deststorepass ${KC_CERTPWD} -destkeypass ${KC_CERTPWD} -destkeystore /home/appuser/data/certificates/keycloak_keystore.jks -srckeystore /home/appuser/data/certificates/keycloak.p12 -srcstoretype PKCS12 -srcstorepass ${KC_CERTPWD} -deststoretype pkcs12
 
-    if [ "$KC_REMOVE_DB" == "true" ]
-    then 
-        echo "Remove existing database"
-        mysql -h ${KC_MYSQLHOST} -u ${KC_MYSQLADMINUSER} -p${KC_MYSQLADMINPASSWORD} -P ${KC_MYSQLPORT} -e "DROP DATABASE IF EXISTS ${KC_MYSQLDB}"
-    fi 
+    ## Disabled, beacuse database should be created with mariadb container scripts
+    # if [ "$KC_REMOVE_DB" == "true" ]
+    # then 
+    #     echo "Remove existing database"
+    #     mysql -h ${KC_MYSQLHOST} -u ${KC_MYSQLADMINUSER} -p${KC_MYSQLADMINPASSWORD} -P ${KC_MYSQLPORT} -e "DROP DATABASE IF EXISTS ${KC_MYSQLDB}"
+    # fi 
 
-    echo "copy database creation script to data directory"
-    cp /home/appuser/app/keycloak_createdb.sql /home/appuser/data/keycloak_createdb.sql
+    # echo "copy database creation script to data directory"
+    # cp /home/appuser/app/keycloak_createdb.sql /home/appuser/data/keycloak_createdb.sql
 
-    echo "patch keycloak_createdb.sql based on given environment variables"
-    sed -i -e "s/#KC_MYSQLUSERNAME#/${KC_MYSQLUSERNAME}/g" /home/appuser/data/keycloak_createdb.sql
-    sed -i -e "s/#KC_MYSQLPASSWORD#/${KC_MYSQLPASSWORD}/g" /home/appuser/data/keycloak_createdb.sql
-    sed -i -e "s/#KC_MYSQLDB#/${KC_MYSQLDB}/g" /home/appuser/data/keycloak_createdb.sql
+    # echo "patch keycloak_createdb.sql based on given environment variables"
+    # sed -i -e "s/#KC_MYSQLUSERNAME#/${KC_MYSQLUSERNAME}/g" /home/appuser/data/keycloak_createdb.sql
+    # sed -i -e "s/#KC_MYSQLPASSWORD#/${KC_MYSQLPASSWORD}/g" /home/appuser/data/keycloak_createdb.sql
+    # sed -i -e "s/#KC_MYSQLDB#/${KC_MYSQLDB}/g" /home/appuser/data/keycloak_createdb.sql
 
-    echo "Create keycloak database - user: ${KC_MYSQLADMINUSER} - password: ***** - host: ${KC_MYSQLHOST}"
-    mysql -h ${KC_MYSQLHOST} -u ${KC_MYSQLADMINUSER} -p${KC_MYSQLADMINPASSWORD} -P ${KC_MYSQLPORT} < /home/appuser/data/keycloak_createdb.sql
-    rm -f /home/appuser/data/keycloak_createdb.sql 
+    # echo "Create keycloak database - user: ${KC_MYSQLADMINUSER} - password: ***** - host: ${KC_MYSQLHOST}"
+    # mysql -h ${KC_MYSQLHOST} -u ${KC_MYSQLADMINUSER} -p${KC_MYSQLADMINPASSWORD} -P ${KC_MYSQLPORT} < /home/appuser/data/keycloak_createdb.sql
+    # rm -f /home/appuser/data/keycloak_createdb.sql 
 
+    # Call keycloak script to add initial user
     # this will create file "/home/appuser/app/keycloak/standalone/configuration/keycloak-add-user.json" before server starts
     echo "Add admin user for \"master\" realm"
     /home/appuser/app/keycloak/bin/add-user-keycloak.sh -r master -u ${KC_ADMINUSER} -p ${KC_ADMINPWD}

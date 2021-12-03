@@ -1,7 +1,10 @@
 FROM        ghcr.io/frickeldave/fd_jre11:11.0.13_p8-r0
 
-ARG         KC_VERSION=15.0.1
-ARG         DBC_VERSION=8.0.27
+# Specify the version of keycloak which should be used.
+ARG         KC_VERSION=15.0.2
+# Sepcify the version of the mariadb j Connector. Tests 3.0.3 version failed, so be careful when updating. 
+ARG         DBC_VERSION=2.7.4 
+
 ARG 		fd_builddate
 ARG 		fd_buildnumber
 
@@ -22,31 +25,34 @@ RUN         apk update; \
             rm -rf /var/lib/apt/lists/*; \
             rm -rf /var/cache/apk/*
 
-ADD         start.sh /home/appuser/app/start.sh
-ADD         module.xml /home/appuser/app/module.xml
-ADD         standalone.xml /home/appuser/app/standalone.xml
-ADD         keycloak_createdb.sql /home/appuser/app/keycloak_createdb.sql
-ADD         testusers.json /home/appuser/app/testusers.json
-
+# Download and install keycloak
 RUN         curl -L https://github.com/keycloak/keycloak/releases/download/${KC_VERSION}/keycloak-${KC_VERSION}.tar.gz --output /home/appuser/app/keycloak.tar.gz --progress-bar; \
 	        tar xzf /home/appuser/app/keycloak.tar.gz -C /home/appuser/app; \
             mv /home/appuser/app/keycloak-${KC_VERSION} /home/appuser/app/keycloak; \
 	        rm -f /home/appuser/app/keycloak.tar.gz; \
-            ls -al /home/appuser/app/keycloak
+            mkdir /home/appuser/app/keycloak/tools
 
-RUN         curl -L https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${DBC_VERSION}.tar.gz --output /home/appuser/app/mysql-connector-java.tar.gz --progress-bar; \
-	        tar xzf /home/appuser/app/mysql-connector-java.tar.gz -C /home/appuser/app; \
-            mkdir -p /home/appuser/app/keycloak/modules/system/layers/keycloak/com/mysql/main; \
-            mv /home/appuser/app/mysql-connector-java-${DBC_VERSION}/mysql-connector-java-${DBC_VERSION}.jar /home/appuser/app/keycloak/modules/system/layers/keycloak/com/mysql/main/mysql-connector-java.jar; \
-            cp -f /home/appuser/app/module.xml /home/appuser/app/keycloak/modules/system/layers/keycloak/com/mysql/main/module.xml; \
-            rm -rf /home/appuser/app/mysql-connector-java-${DBC_VERSION}; \
-            rm -rf /home/appuser/app/mysql-connector-java.tar.gz; \
-            ls -al /home/appuser/app/keycloak 
+# Install the mariadb java driver
+RUN         mkdir -p /home/appuser/app/keycloak/modules/system/layers/keycloak/com/mariadb/main; \
+            curl -L https://downloads.mariadb.com/Connectors/java/connector-java-${DBC_VERSION}/mariadb-java-client-${DBC_VERSION}.jar --output /home/appuser/app/keycloak/modules/system/layers/keycloak/com/mariadb/main/mariadb-java-client.jar --progress-bar
 
-RUN         chown appuser:appuser /home/appuser/app/start.sh /home/appuser/app/keycloak_createdb.sql /home/appuser/app/testusers.json; \
+# Add all additional needed files
+ADD         start.sh /home/appuser/app/start.sh
+
+ADD         testusers.json /home/appuser/app/keycloak/tools/testusers.json
+# Configures the certificates
+ADD         keycloak_setcertificate.cli /home/appuser/app/keycloak/tools/keycloak_setcertificates.cli
+# Configures the database connection into wildfly config file (used by jboss-cli)
+ADD         mariadb_datasource.cli /home/appuser/app/keycloak/tools/mariadb_datasource.cli
+# Configure higher timeout values into wildfly config file (used by jboss-cli) - https://serviceorientedarchitect.com/wflyctl0348-timeoutexception-while-running-keycloak-in-a-docker-container-with-an-external-database-mariadb/
+ADD         keycloak_settimeout.cli /home/appuser/app/keycloak/tools/keycloak_settimeout.cli
+# Copy the mariadb config module
+ADD         mariadb_module.xml /home/appuser/app/keycloak/modules/system/layers/keycloak/com/mariadb/main/module.xml
+
+# Set permissions
+RUN         chown appuser:appuser /home/appuser/app/start.sh; \
             chown -R appuser:appuser /home/appuser/app/keycloak; \
-            chmod +x /home/appuser/app/start.sh; \
-            ls -al /home/appuser/app/keycloak 
+            chmod +x /home/appuser/app/start.sh
 
 USER        appuser
 

@@ -1,0 +1,39 @@
+embed-server --std-out=echo --server-config=standalone.xml -c
+ 
+module add --name=org.mariadb.jdbc \ 
+      --dependencies=javax.api,javax.transaction.api \
+      --resources=/home/appuser/app/keycloak/modules/system/layers/keycloak/com/mariadb/main/mariadb-java-client.jar
+ 
+/subsystem=datasources/jdbc-driver=org.mariadb.jdbc.Driver:add(driver-name="org.mariadb.jdbc.Driver", driver-module-name="org.mariadb.jdbc", driver-class-name="org.mariadb.jdbc.Driver", driver-xa-datasource-class-name="org.mariadb.jdbc.MariaDbDataSource")
+
+# Remove old database connection if it exists
+if (outcome == success) of /subsystem=datasources/data-source=KeycloakDS:read-resource
+   data-source remove \
+      --name=KeycloakDS
+end-if
+
+# Add new database connection if it does not exist
+if (outcome != success) of /subsystem=datasources/data-source=KeycloakDS:read-resource
+   data-source add \
+      --name=KeycloakDS \
+      --jndi-name=java:jboss/datasources/KeycloakDS \
+      --driver-name=org.mariadb.jdbc.Driver \
+      --connection-url=jdbc:mariadb://${env.KC_MDBHOST:mariadb}:${env.KC_MDBPORT:3306}/${env.KC_MDBDB:keycloak} \
+      --user-name=${env.KC_MDBUSERNAME:keycloak} \
+      --password=${env.KC_MDBPASSWORD:keycloakpwd} \
+      --check-valid-connection-sql="/* ping */ SELECT 1"
+end-if 
+
+#xa-data-source add --name=kcdatasourcexa \
+#      --driver-name=org.mariadb.jdbc.Driver \
+#      --jndi-name=java:/jdbc/kcdatasourcexa \
+#      --user-name=${env.KC_MDBUSERNAME:keycloak} \
+#      --password=${env.KC_MDBPASSWORD:keycloakpwd} \
+#      --recovery-username=${env.KC_MDBUSERNAME:keycloak} \
+#      --recovery-password=${env.KC_MDBPASSWORD:keycloakpwd} \
+#      --xa-datasource-properties=Url=jdbc:mysql://${env.RDS_HOSTNAME:mariadb}:${env.KC_MDBPORT:3306}/${env.KC_MDBDB:keycloak} \ 
+#      --xa-datasource-class=org.mariadb.jdbc.MariaDbDataSource\
+#      --check-valid-connection-sql="/* ping */ SELECT 1"
+
+#quit
+stop-embedded-server

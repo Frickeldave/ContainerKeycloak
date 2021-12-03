@@ -4,6 +4,8 @@ services:
   mariadb:
     image: ghcr.io/frickeldave/fd_mariadb:10.6.4-r1
     hostname: mariadb
+    ports:
+      - "30110:30110"
     restart: "no"
     # volumes: # Tip: Disable for frequently recurring tests
     #   - mariadb-data:/home/appuser/data
@@ -31,9 +33,15 @@ services:
       - MDB_APPDB_PWD=adminkeycloakdb2test
   
   keycloak:
-    image: ghcr.io/frickeldave/fd_keycloak:15.0.1
-    entrypoint: /bin/sh -c 'echo "overridden entrypoint" > /tmp/test; tail -f /tmp/test;'
+    image: ghcr.io/frickeldave/fd_keycloak:latest
+    # entrypoint: /bin/sh -c 'echo "overridden entrypoint" > /tmp/test; tail -f /tmp/test;'
     hostname: keycloak
+    ports:
+      - "30120:30120"
+      - "30121:30121"
+      - "30122:30122"
+      - "30123:30123"
+      - "30124:30124"
     restart: "no"
     # volumes: # Tip: Disable for frequently recurring tests
     #   - keycloak-data:/home/appuser/data
@@ -51,17 +59,14 @@ services:
       - KC_HTTPSINTPORT=30120
       - KC_MGNTHTTPINTPORT=30123
       - KC_MGNTHTTPSINTPORT=30122
-      #- KC_MYSQLADMINUSER=adminmdb
-      #- KC_MYSQLADMINPASSWORD=admin2test
-      - KC_MYSQLHOST=172.66.30.110
-      - KC_MYSQLPORT=30110
-      - KC_MYSQLDB=keycloak
-      - KC_MYSQLUSERNAME=adminkeycloakdb
-      - KC_MYSQLPASSWORD=adminkeycloakdb2test
-      - KC_MYSQLHEALTHUSER=healthstatus
-      - KC_MYSQLHEALTHPWD=health2test
+      - KC_MDBHOST=mariadb
+      - KC_MDBPORT=30110
+      - KC_MDBDB=keycloak
+      - KC_MDBUSERNAME=adminkeycloakdb
+      - KC_MDBPASSWORD=adminkeycloakdb2test
+      - KC_MDBHEALTHUSER=healthstatus
+      - KC_MDBHEALTHPWD=health2test
       - KC_BINDADDRESS=172.66.30.120
-      #- KC_REMOVE_DB=true
       - KC_CERTPWD=cert2test
       - KC_ADMINUSER=kcadmin
       - KC_ADMINPWD=kcadmin2test
